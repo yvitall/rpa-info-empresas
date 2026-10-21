@@ -3,7 +3,7 @@ import requests
 
 
 
-cnpj = "02.636.065/0001-53";
+cnpj = "02.636.065/0001-53"; ##vou implementar entrada dinâmica com python e tratamento de erros
 cnpj_limpo = "".join(c for c in cnpj if c.isdigit())
 try:
     print(f"Iniciando busca pelo CNPJ: {cnpj}")
