@@ -1,3 +1,4 @@
+from socket import timeout
 import html
 from requests import status_codes
 import requests
@@ -14,6 +15,12 @@ MAPA_SITUACAO = {
 def mapear_situacao_cadastral(situacao_cadastral):
     return MAPA_SITUACAO.get(situacao_cadastral, "Código Inválido")
 
+def busca(dados_empresa):
+    if dados_empresa.get('razao_social'):
+        return dados_empresa["razao_social"]
+    else:
+        return dados_empresa["cnpj"]
+
 print("Digite um cnpj para realizar consulta:")
 cnpj = input("CNPJ: ")
 cnpj_limpo = "".join(c for c in cnpj if c.isdigit())
@@ -21,7 +28,7 @@ try:
     print(f"Iniciando busca pelo CNPJ: {cnpj}")
     link_api = f"https://brasilapi.com.br/api/cnpj/v1/{cnpj_limpo}"
     
-    r = requests.get(link_api)
+    r = requests.get(link_api, timeout = 15000)
     
     if r.status_code == 200:
         dados_empresa = r.json()
@@ -50,10 +57,18 @@ try:
         print("Telefone 02:", dados_empresa["ddd_telefone_2"])
         
         print("==== O QUE DIZ O GOOGLE? ====")
-        link_google = f"https://www.google.com.br/search?q={dados_empresa["razao_social" or "cnpj"]}"
-        resposta = requests.get(link_google)
+        termo_pesquisa = busca(dados_empresa)
+        link_google = f"https://www.google.com.br/search?q={busca}"
+        
+        # google nao pensar que somos bot, precisamos de um crachá, uma configuração como se fossemos usuarios comuns acessando
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        
+        resposta = requests.get(link_google, headers= headers)
+        
         if resposta.status_code == 200:
-            html_puro = resposta.text()
+            html_puro = resposta.text
             
             soup = BeautifulSoup(html_puro, "html.parser")
 
